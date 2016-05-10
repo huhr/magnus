@@ -1,0 +1,34 @@
+2016-05-10 15:37:29 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:39:03 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:39:21 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:39:25 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:39:37 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:39:40 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:40:03 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:40:56 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:42:49 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:58:37 DEBUG root main.go:69 :: load config success 
+2016-05-10 15:58:37 DEBUG root adapter.go:40 :: init streams 
+2016-05-10 15:58:37 DEBUG root adapter.go:44 :: start run 
+2016-05-10 16:05:39 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:05:39 DEBUG root adapter.go:41 :: init streams 
+2016-05-10 16:05:39 DEBUG root adapter.go:45 :: start run 
+2016-05-10 16:48:10 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:48:10 DEBUG root adapter.go:41 :: init streams 
+2016-05-10 16:48:10 DEBUG root adapter.go:45 :: start run 
+2016-05-10 16:48:44 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:48:44 DEBUG root adapter.go:41 :: init streams 
+2016-05-10 16:48:44 DEBUG root adapter.go:45 :: start run 
+2016-05-10 16:48:47 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:48:47 DEBUG root adapter.go:41 :: init streams 
+2016-05-10 16:48:47 DEBUG root adapter.go:45 :: start run 
+2016-05-10 16:48:52 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:48:52 DEBUG root adapter.go:42 :: init streams 
+2016-05-10 16:48:52 DEBUG root adapter.go:46 :: start run 
+2016-05-10 16:49:08 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:49:08 DEBUG root adapter.go:42 :: init streams 
+2016-05-10 16:49:08 DEBUG root adapter.go:46 :: start run 
+2016-05-10 16:51:13 DEBUG root main.go:69 :: load config success 
+2016-05-10 16:51:13 DEBUG root adapter.go:42 :: init streams 
+2016-05-10 16:51:13 DEBUG root adapter.go:46 :: start run 
+2016-05-10 18:02:14 DEBUG root adapter.go:45 :: init streams 

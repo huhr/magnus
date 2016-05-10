@@ -1,0 +1,14 @@
+# This is a TOML document. Boom.
+
+# stream名称
+name="console_stream"
+# stream的流转方式
+rollType=0
+# 内存中缓存的数据数
+cacheSize=100
+
+[[pcfgs]]
+producer="console"
+
+[[ccfgs]]
+consumer="console"
