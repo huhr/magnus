@@ -39,11 +39,11 @@ func main() {
 	}
 
 	adapter := NewAdapter(flagExeDir)
-	exitCode = adapter.run()
+	exitCode = adapter.Run()
 }
 
 func parseFlag() {
-	flag.BoolVar(&flagVersion, "version", false, "version")
+	flag.BoolVar(&flagVersion, "v", false, "version")
 	flag.StringVar(&flagExeDir, "d", "", "Config File")
 	flag.Parse()
 }

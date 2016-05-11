@@ -4,13 +4,17 @@ import (
 	"github.com/huhr/magnus/config"
 )
 
-//
-type Consumer interface{
+type Consumer interface {
 	// 消费一条数据
-	Consume(chan []byte)
+	Consume()
 }
 
-// 根据配置内容创建consumer
-func NewConsumer(cfg config.ConsumerConfig) Consumer {
-	return nil
+type BaseConsumer struct {
+	cfg config.ConsumerConfig
+	pipe chan []byte
+}
+
+// 创建Consumer
+func NewConsumer(cfg config.ConsumerConfig, pipe chan []byte) Consumer {
+	return &ConsoleConsumer{BaseConsumer{cfg, pipe}}
 }

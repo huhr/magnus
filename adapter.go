@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 	"sync"
 
@@ -33,19 +32,19 @@ func (a *Adapter) initStream() error {
 		}
 		a.streams = append(a.streams, stream.NewStream(cfg))
 	}
-	fmt.Printf("%+v", a.streams[0])
 	return nil
 }
 
 
 // 启动各个stream
-func (a Adapter) run() int {
+func (a Adapter) Run() int {
 	var wg sync.WaitGroup
 
 	log.Debug("init streams")
 	if a.initStream() != nil {
 		return 1
 	}
+	log.Debug("total %d streams", len(a.streams))
 	for _, s := range a.streams {
 		wg.Add(1)
 		go func() {
@@ -53,6 +52,7 @@ func (a Adapter) run() int {
 			s.Run()
 		}()
 	}
+	wg.Wait()
 	return 0
 }
 

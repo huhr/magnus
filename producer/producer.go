@@ -6,15 +6,29 @@ import (
 
 // Producer接口，负责生产数据
 type Producer interface{
-	// 生产一条数据
-	Produce(chan []byte)
+	// 程序停机时，先停producer
+	ShutDown()
+	// 生产数据，produce函数是协程的执行体
+	Produce()
+	// 是否处于启动状态
+	IsActive() bool
 }
 
 // 根据配置内容创建producer
-func NewProducer(config.ProducerConfig) Producer {
-	return nil
+func NewProducer(cfg config.ProducerConfig, pipe chan []byte) Producer {
+	return NewConsoleProducer(cfg, pipe)
 }
 
 type BaseProducer struct {
+	cfg config.ProducerConfig
+	pipe chan []byte
+	isOff bool
 }
 
+func (base *BaseProducer) ShutDown() {
+	base.isOff = true
+}
+
+func (base *BaseProducer) IsActive() bool {
+	return !base.isOff
+}

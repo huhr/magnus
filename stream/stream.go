@@ -2,6 +2,7 @@ package stream
 
 import (
 	"errors"
+	"sync"
 
 	log "github.com/huhr/simplelog"
 
@@ -46,19 +47,41 @@ func (s *Stream) initEnds() error {
 		return errors.New("producer or consumer is missing")
 	}
 	for _, cfg := range s.Cfg.Pcfgs {
-		s.producers = append(s.producers, producer.NewProducer(cfg))
+		s.producers = append(s.producers, producer.NewProducer(cfg, s.Pipe))
 	}
 	for _, cfg := range s.Cfg.Ccfgs {
-		s.consumers = append(s.consumers, consumer.NewConsumer(cfg))
+		s.consumers = append(s.consumers, consumer.NewConsumer(cfg, s.Pipe))
 	}
 	return nil
 }
 
 func (s *Stream) Run() {
+	var wg sync.WaitGroup
 	log.Debug("stream init")
 	if s.initEnds() != nil {
 		return
 	}
-	log.Debug("stream run")
+	log.Debug("stream: %s, total: %d producers", s.Name, len(s.producers))
+	for _, p := range s.producers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			p.Produce()
+		}()
+	}
+	go func() {
+		s.Roll()
+	}()
+
+	wg.Wait()
 	return
 }
+
+func (s *Stream) Roll() {
+	for true {
+		for _, c := range s.consumers {
+			c.Consume()
+		}
+	}
+}
+

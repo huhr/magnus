@@ -9,6 +9,10 @@ cacheSize=100
 
 [[pcfgs]]
 producer="console"
+delimiter="\n"
+bufSize=0
+filters=['point']
 
 [[ccfgs]]
 consumer="console"
+filters=['coma']
