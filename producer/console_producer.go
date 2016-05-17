@@ -7,19 +7,20 @@ import (
 
 	"github.com/huhr/magnus/config"
 	"github.com/huhr/magnus/filter"
+	"github.com/huhr/magnus/util"
 )
 
 // 输出到控制台
 type ConsoleProducer struct {
 	BaseProducer
-	reader *UnitReader
+	reader *util.UnitReader
 }
 
 func NewConsoleProducer(cfg config.ProducerConfig, pipe chan []byte) *ConsoleProducer {
 	base := BaseProducer{cfg: cfg, pipe: pipe}
 	return &ConsoleProducer{
 		BaseProducer: base,
-		reader: NewUnitReader(os.Stdin, cfg.Delimiter, cfg.BufSiZe),
+		reader: util.NewUnitReader(os.Stdin, cfg.Delimiter, cfg.BufSize),
 	}
 }
 

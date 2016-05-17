@@ -44,6 +44,7 @@ func NewStream(cfg config.StreamConfig) *Stream {
 // 创建stream两端的生产消费对象
 func (s *Stream) initEnds() error {
 	if len(s.Cfg.Pcfgs) == 0 || len(s.Cfg.Ccfgs) == 0 {
+		log.Error("producer or consumer is missing")
 		return errors.New("producer or consumer is missing")
 	}
 	for _, cfg := range s.Cfg.Pcfgs {

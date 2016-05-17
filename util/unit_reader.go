@@ -1,12 +1,12 @@
-package producer
+package util
 
 import (
 	"bytes"
+	"errors"
 	"io"
 )
 
 const (
-	// line size must be smaller than bufferSize or front of the line will be lost
 	DefaultBufferSize = 1<<10
 )
 
@@ -14,8 +14,8 @@ type UnitReader struct {
 	reader		io.Reader
 	delimiter	string
 	buf			[]byte
+	retry       int
 	r, w		int        // buffer的读写位置
-	eof			bool       // 是否读到文件尾
 }
 
 func NewUnitReader(reader io.Reader, delimiter string, bufSize int) *UnitReader {
@@ -29,40 +29,37 @@ func NewUnitReader(reader io.Reader, delimiter string, bufSize int) *UnitReader 
 	}
 }
 
-// 根据分隔符read一个数据单元，有可能读到文件尾了，这时候
-// 返回异常
-func (c *UnitReader) ReadOne() ([]byte, error) {
+func (c *UnitReader) ResetReader(reader io.Reader) {
+	c.reader = reader
+}
+
+// 根据分隔符read一个数据单元
+func (c *UnitReader) ReadOne() (msg []byte, err error) {
 	for true {
-		var offset int
-		// 不用每次都读数据
-		if c.r == c.w {
-			if _, err := c.fill(); err != nil {
-				return c.buf[c.r:c.w], err
-			}
-		}
-		offset = bytes.Index(c.buf[c.r:c.w], []byte(c.delimiter))
-		// 找不到的情况下
+		offset := bytes.Index(c.buf[c.r:c.w], []byte(c.delimiter))
 		if offset == -1 {
-			// 重新读一次数据
-			if c.w - c.r != cap(c.buf) {
-				if _, err := c.fill(); err != nil {
-					return c.buf[c.r:c.w], err
-				}
-				continue
-			}
 			// buf已经读满了，直接返回buf中的全部数据作为一个数据单元
-			msg := make([]byte, len(c.buf))
-			copy(msg, c.buf)
-			c.r = c.w
-			return msg, nil
+			if c.w - c.r == cap(c.buf) {
+				msg := make([]byte, len(c.buf))
+				copy(msg, c.buf)
+				c.r = c.w
+				return msg, errors.New("too large msg")
+			}
+			// 再读一次，没读到数据的话不需要continue了，返回给上层
+			if n, err := c.fill(); n == 0 && err != nil {
+				return make([]byte, 0), err
+			}
+
+			// 读到了数据，而且buffer还没有满，再查询一次
+			continue
 		}
-		// 读到数据了
 		msg := make([]byte, offset)
 		copy(msg, c.buf[c.r:c.r + offset])
 		c.r += offset + len(c.delimiter)
 		return msg, nil
 	}
-	return nil, nil
+	// 这里不会被触发
+	return make([]byte, 0), nil
 }
 
 // 填充数据

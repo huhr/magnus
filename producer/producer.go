@@ -16,7 +16,13 @@ type Producer interface{
 
 // 根据配置内容创建producer
 func NewProducer(cfg config.ProducerConfig, pipe chan []byte) Producer {
-	return NewConsoleProducer(cfg, pipe)
+	switch cfg.Producer {
+	case "console":
+		return NewConsoleProducer(cfg, pipe)
+	case "file":
+		return NewFileProducer(cfg, pipe)
+	}
+	return nil
 }
 
 type BaseProducer struct {

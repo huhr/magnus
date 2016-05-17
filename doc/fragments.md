@@ -22,15 +22,5 @@ INI文件更好一些，但是这里使用TOML作为配置文件格式，TOML目
 https://github.com/toml-lang/toml    
 https://github.com/BurntSushi/toml
 
-### 主要的实现功能和模式
-提供n:m的功能很重要，例如logtailer，如果后端python的app，出现性能问题时，
-依赖kafka的partitions才能水平扩展，如果上游不支持水平扩展，比较麻烦，支持
-类似actsender2进行的水平扩展很关键，支持简单轮询，权重等分配规则。
-
-### 解决哪些问题
-构想：支持支持扩展开发模式，类似actsender2的场景使用开发模式，定制producer
-重新编译，consumer使用多个app即可。类似日志收集等需求，adapter直接提供。
-改善jvm资源消耗，启动慢等问题。
-
-### 大体逻辑
-producer、filter、format、dispatcher、format、filter、consumer
+### Offset
+Offset是以byte为单位的

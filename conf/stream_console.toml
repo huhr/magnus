@@ -8,7 +8,8 @@ rollType=0
 cacheSize=100
 
 [[pcfgs]]
-producer="console"
+producer="file"
+filePath="/home/huhaoran/z/file"
 delimiter="\n"
 bufSize=0
 filters=['point']
