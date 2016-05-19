@@ -16,11 +16,12 @@ type Producer interface{
 
 // 根据配置内容创建producer
 func NewProducer(cfg config.ProducerConfig, pipe chan []byte) Producer {
+	base := &BaseProducer{cfg: cfg, pipe: pipe}
 	switch cfg.Producer {
 	case "console":
-		return NewConsoleProducer(cfg, pipe)
+		return NewConsoleProducer(base)
 	case "file":
-		return NewFileProducer(cfg, pipe)
+		return NewFileProducer(base)
 	}
 	return nil
 }
@@ -35,6 +36,6 @@ func (base *BaseProducer) ShutDown() {
 	base.isOff = true
 }
 
-func (base *BaseProducer) IsActive() bool {
+func (base BaseProducer) IsActive() bool {
 	return !base.isOff
 }

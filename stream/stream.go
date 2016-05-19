@@ -25,7 +25,7 @@ const (
 // 每条数据流可以对应多个producers和consumers
 type Stream struct{
 	Name    string
-	RollType    int
+	TransitType    int
 	Pipe	chan []byte
 	Cfg     config.StreamConfig
 	consumers []consumer.Consumer
@@ -35,7 +35,7 @@ type Stream struct{
 func NewStream(cfg config.StreamConfig) *Stream {
 	return &Stream{
 		Name: cfg.Name,
-		RollType: cfg.RollType,
+		TransitType: cfg.TransitType,
 		Pipe: make(chan []byte, cfg.CacheSize),
 		Cfg: cfg,
 	}
@@ -48,9 +48,16 @@ func (s *Stream) initEnds() error {
 		return errors.New("producer or consumer is missing")
 	}
 	for _, cfg := range s.Cfg.Pcfgs {
-		s.producers = append(s.producers, producer.NewProducer(cfg, s.Pipe))
+		cfg.StreamName = s.Name
+		p := producer.NewProducer(cfg, s.Pipe)
+		// 这里牛逼了
+		if p == nil {
+			continue
+		}
+		s.producers = append(s.producers, p)
 	}
 	for _, cfg := range s.Cfg.Ccfgs {
+		cfg.StreamName = s.Name
 		s.consumers = append(s.consumers, consumer.NewConsumer(cfg, s.Pipe))
 	}
 	return nil
@@ -58,11 +65,12 @@ func (s *Stream) initEnds() error {
 
 func (s *Stream) Run() {
 	var wg sync.WaitGroup
-	log.Debug("stream init")
-	if s.initEnds() != nil {
+	if err := s.initEnds(); err != nil {
+		log.Error("Init stream %s fail: %s", s.Name, err.Error())
 		return
 	}
-	log.Debug("stream: %s, total: %d producers", s.Name, len(s.producers))
+	log.Debug("stream: %s, total: %d producers, %d consumers", s.Name, len(s.producers), len(s.consumers))
+	// 启动各个生产协程
 	for _, p := range s.producers {
 		wg.Add(1)
 		go func() {
@@ -70,19 +78,31 @@ func (s *Stream) Run() {
 			p.Produce()
 		}()
 	}
+	// 启动消费协程
+	wg.Add(1)
 	go func() {
-		s.Roll()
+		defer wg.Done()
+		s.Transit()
 	}()
 
+	// 所有携程之行完再退出
 	wg.Wait()
 	return
 }
 
-func (s *Stream) Roll() {
-	for true {
-		for _, c := range s.consumers {
-			c.Consume()
-		}
+func (s *Stream) ShutDown() {
+	for _, p := range s.producers {
+		p.ShutDown()
+	}
+}
+
+
+// 根据不同的策略，将数据分发给不同的Consume
+func (s *Stream) Transit() {
+	var i int
+	for msg := range s.Pipe {
+		s.consumers[i].Consume(msg)
+		i = (i + 1) % len(s.consumers)
 	}
 }
 

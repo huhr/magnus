@@ -3,17 +3,21 @@
 # stream名称
 name="console_stream"
 # stream的流转方式
-rollType=0
+transitType=0
 # 内存中缓存的数据数
 cacheSize=100
 
 [[pcfgs]]
+workerName="testFile"
 producer="file"
-filePath="/home/huhaoran/z/file"
+filePath="/home/huhaoran/z/text"
+backDir="/home/huhaoran/z/"
+rollType=1
 delimiter="\n"
 bufSize=0
 filters=['point']
 
 [[ccfgs]]
+workerName="testFile"
 consumer="console"
 filters=['coma']

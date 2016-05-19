@@ -38,7 +38,16 @@ func main() {
 		return
 	}
 
-	adapter := NewAdapter(flagExeDir)
+	os.Chdir(flagExeDir)
+	// runtime文件夹用来存放中间文件，中间文件一定要存文本格式，便于特殊需求下手动修改
+	if stat, err := os.Stat("runtime"); os.IsNotExist(err) || !stat.IsDir() {
+		if err := os.Mkdir("runtime", os.ModePerm); err != nil {
+			log.Error(err.Error())
+			exitCode = 1
+			return
+		}
+	}
+	adapter := NewAdapter()
 	exitCode = adapter.Run()
 }
 

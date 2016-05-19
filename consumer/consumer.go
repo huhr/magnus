@@ -6,12 +6,12 @@ import (
 
 type Consumer interface {
 	// 消费一条数据
-	Consume()
+	Consume([]byte) bool
 }
 
 type BaseConsumer struct {
-	cfg config.ConsumerConfig
-	pipe chan []byte
+	cfg		config.ConsumerConfig
+	pipe	chan []byte
 }
 
 // 创建Consumer

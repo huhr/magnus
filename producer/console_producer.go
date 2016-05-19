@@ -5,22 +5,20 @@ import (
 
 	log "github.com/huhr/simplelog"
 
-	"github.com/huhr/magnus/config"
 	"github.com/huhr/magnus/filter"
 	"github.com/huhr/magnus/util"
 )
 
 // 输出到控制台
 type ConsoleProducer struct {
-	BaseProducer
+	*BaseProducer
 	reader *util.UnitReader
 }
 
-func NewConsoleProducer(cfg config.ProducerConfig, pipe chan []byte) *ConsoleProducer {
-	base := BaseProducer{cfg: cfg, pipe: pipe}
+func NewConsoleProducer(base *BaseProducer) Producer {
 	return &ConsoleProducer{
 		BaseProducer: base,
-		reader: util.NewUnitReader(os.Stdin, cfg.Delimiter, cfg.BufSize),
+		reader: util.NewUnitReader(os.Stdin, base.cfg.Delimiter, base.cfg.BufSize),
 	}
 }
 
