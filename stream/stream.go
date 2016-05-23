@@ -14,7 +14,7 @@ import (
 // 流转方式
 const (
 	// 轮询
-	ROUNDROBIN = iota
+	ROUNDROBIN = iota + 1
 	// 广播
 	BROADCAST
 	// 带权重随机
@@ -94,6 +94,7 @@ func (s *Stream) ShutDown() {
 	for _, p := range s.producers {
 		p.ShutDown()
 	}
+	close(s.Pipe)
 }
 
 

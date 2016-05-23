@@ -12,6 +12,7 @@ workerName="testFile"
 producer="file"
 filePath="/home/huhaoran/z/text"
 backDir="/home/huhaoran/z/"
+position=1
 rollType=1
 delimiter="\n"
 bufSize=0

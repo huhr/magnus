@@ -10,9 +10,10 @@ type StreamConfig struct {
 
 type ProducerConfig struct {
 	StreamName  string
-	WorkerName        string
+	WorkerName  string
 	FilePath    string
 	BackDir     string
+	Position    int
 	RollType    int
 	Producer	string
 	Delimiter	string
