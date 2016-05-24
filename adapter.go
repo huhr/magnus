@@ -45,7 +45,6 @@ func (a *Adapter) initStream() error {
 // 启动各个stream
 func (a Adapter) Run() int {
 	var wg sync.WaitGroup
-
 	a.registerSigalHandler()
 	log.Debug("begin to init streams")
 	if a.initStream() != nil {

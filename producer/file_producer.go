@@ -78,7 +78,8 @@ func (f *FileProducer) Produce() {
 				}
 				err := f.seekFile()
 				if err !=nil {
-					println(err.Error())
+					log.Error(err.Error())
+					time.Sleep(1 * time.Second)
 				}
 				continue
 			}

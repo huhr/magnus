@@ -8,7 +8,7 @@ transitType=0
 cacheSize=100
 
 [[pcfgs]]
-workerName="testFile"
+workerName="testFile1"
 producer="file"
 filePath="/home/huhaoran/z/text"
 backDir="/home/huhaoran/z/"
@@ -18,7 +18,19 @@ delimiter="\n"
 bufSize=0
 filters=['point']
 
+[[pcfgs]]
+workerName="testFile2"
+producer="file"
+filePath="/home/huhaoran/z/file"
+backDir="/home/huhaoran/z/"
+position=1
+rollType=1
+delimiter="\n"
+bufSize=0
+filters=['point']
+
 [[ccfgs]]
-workerName="testFile"
+workerName="testConsole"
 consumer="console"
 filters=['coma']
+

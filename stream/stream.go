@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"fmt"
 	"errors"
 	"sync"
 
@@ -73,19 +74,27 @@ func (s *Stream) Run() {
 	// 启动各个生产协程
 	for _, p := range s.producers {
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		log.Debug("producer %s start", p.Name())
+		go func(p producer.Producer) {
+			fmt.Println("goroutine process")
+			defer func() {
+				wg.Done()
+				log.Debug("producer %s done", p.Name())
+			}()
 			p.Produce()
-		}()
+		}(p)
 	}
 	// 启动消费协程
 	wg.Add(1)
+	log.Debug("consumer start")
 	go func() {
-		defer wg.Done()
+		defer func() {
+			wg.Done()
+			log.Debug("consumer start")
+		}()
 		s.Transit()
 	}()
 
-	// 所有携程之行完再退出
 	wg.Wait()
 	return
 }
@@ -99,6 +108,7 @@ func (s *Stream) ShutDown() {
 
 
 // 根据不同的策略，将数据分发给不同的Consume
+// 这里需要是并发的，但是要限制一定的并发度
 func (s *Stream) Transit() {
 	var i int
 	for msg := range s.Pipe {

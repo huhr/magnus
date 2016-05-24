@@ -23,8 +23,8 @@ type ProducerConfig struct {
 
 type ConsumerConfig struct {
 	StreamName  string
-	WorkerName        string
-	Consumer	string
+	WorkerName  string
+	FilePath    string
 	Filters		[]string
 }
 
