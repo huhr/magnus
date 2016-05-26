@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"fmt"
 	"errors"
 	"sync"
 
@@ -51,7 +50,6 @@ func (s *Stream) initEnds() error {
 	for _, cfg := range s.Cfg.Pcfgs {
 		cfg.StreamName = s.Name
 		p := producer.NewProducer(cfg, s.Pipe)
-		// 这里牛逼了
 		if p == nil {
 			continue
 		}
@@ -59,6 +57,10 @@ func (s *Stream) initEnds() error {
 	}
 	for _, cfg := range s.Cfg.Ccfgs {
 		cfg.StreamName = s.Name
+		c := consumer.NewConsumer(cfg, s.Pipe)
+		if c == nil {
+			continue
+		}
 		s.consumers = append(s.consumers, consumer.NewConsumer(cfg, s.Pipe))
 	}
 	return nil
@@ -76,7 +78,6 @@ func (s *Stream) Run() {
 		wg.Add(1)
 		log.Debug("producer %s start", p.Name())
 		go func(p producer.Producer) {
-			fmt.Println("goroutine process")
 			defer func() {
 				wg.Done()
 				log.Debug("producer %s done", p.Name())

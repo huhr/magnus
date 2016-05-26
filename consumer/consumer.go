@@ -16,5 +16,11 @@ type BaseConsumer struct {
 
 // 创建Consumer
 func NewConsumer(cfg config.ConsumerConfig, pipe chan []byte) Consumer {
-	return &ConsoleConsumer{BaseConsumer{cfg, pipe}}
+	switch cfg.Consumer {
+	case "console":
+		return &ConsoleConsumer{BaseConsumer{cfg, pipe}}
+	case "app":
+		return NewAppConsumer(BaseConsumer{cfg, pipe})
+	}
+	return nil
 }

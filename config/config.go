@@ -24,7 +24,13 @@ type ProducerConfig struct {
 type ConsumerConfig struct {
 	StreamName  string
 	WorkerName  string
+	Consumer    string
 	FilePath    string
 	Filters		[]string
+	///////////////////////////////////
+	//  App模式，启动子程序处理数据  //
+	///////////////////////////////////
+	StartupScript string
+	OutputDir     string
 }
 
