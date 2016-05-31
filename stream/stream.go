@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"io"
 	"errors"
 	"sync"
 
@@ -115,6 +116,10 @@ func (s *Stream) Transit() {
 	for msg := range s.Pipe {
 		s.consumers[i].Consume(msg)
 		i = (i + 1) % len(s.consumers)
+	}
+	// pipe已经关闭了，现在需要给所有的consumer发送一个EOF
+	for _, c := range s.consumers {
+		c.Consume()
 	}
 }
 

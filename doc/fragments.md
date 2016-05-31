@@ -66,4 +66,5 @@ Golang的interface类型包含两个元素，类型与值，仅当类型和值�
 
 ### 启动子进程
 golang提供的os.StartProcess()通过系统调用SYS_CLONE来创建新的进程，使用EXEC执行，
-使用SYS_DUP进行输入输出重定向
+使用SYS_DUP进行输入输出重定向，os/exec通过建立pipeline获取子进程的stdin、stdout、
+stderr等打开的文件描述符

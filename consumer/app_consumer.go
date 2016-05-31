@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -16,7 +15,6 @@ type AppConsumer struct {
 	BaseConsumer
 	cmd			*exec.Cmd
 	appStdin	io.WriteCloser
-	appStdout   io.ReadCloser
 }
 
 func NewAppConsumer(base BaseConsumer) *AppConsumer {
@@ -25,7 +23,12 @@ func NewAppConsumer(base BaseConsumer) *AppConsumer {
 	if err != nil {
 		return nil
 	}
-	appStdout, err := cmd.StdoutPipe()
+	// 重定向标准输出和标准错误输出
+	cmd.Stdout, err = os.Create(base.cfg.OutputDir + "/stdout")
+	if err != nil {
+		return nil
+	}
+	cmd.Stderr, err = os.Create(base.cfg.OutputDir + "/stderr")
 	if err != nil {
 		return nil
 	}
@@ -34,19 +37,14 @@ func NewAppConsumer(base BaseConsumer) *AppConsumer {
 		log.Error(err.Error())
 		return nil
 	}
-	go func() {
-		io.Copy(os.Stdin, appStdout)
-	}()
-	return &AppConsumer{base, cmd, appStdin, appStdout}
+	return &AppConsumer{base, cmd, appStdin}
 }
 
 func (app *AppConsumer) Consume(msg []byte) bool {
 	if !filter.Filter(msg, app.cfg.Filters) {
-		fmt.Println("msg: %s", msg)
-		n, err := app.appStdin.Write(msg)
-		fmt.Println(n)
-		if err != nil {
-			fmt.Println(err.Error())
+		if _, err := app.appStdin.Write(msg); err != nil{
+			log.Error(err.Error())
+			return false
 		}
 	}
 	return true
