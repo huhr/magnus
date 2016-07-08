@@ -29,14 +29,14 @@ delimiter="\n"
 bufSize=0
 filters=['point']
 
-#[[ccfgs]]
-#workerName="testConsole"
-#consumer="console"
-#filters=['coma']
+[[ccfgs]]
+workerName="testConsole"
+consumer="console"
+filters=['coma']
 
 [[ccfgs]]
 workerName="testApp"
 consumer="app"
-startupScript="/home/huhaoran/z/app/print.py"
+startupScript="/home/huhaoran/z/app/app"
 outputDir="/home/huhaoran/z/app"
 filters=['coma']

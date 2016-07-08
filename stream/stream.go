@@ -1,8 +1,8 @@
 package stream
 
 import (
-	"io"
 	"errors"
+	"fmt"
 	"sync"
 
 	log "github.com/huhr/simplelog"
@@ -51,19 +51,24 @@ func (s *Stream) initEnds() error {
 	for _, cfg := range s.Cfg.Pcfgs {
 		cfg.StreamName = s.Name
 		p := producer.NewProducer(cfg, s.Pipe)
-		if p == nil {
-			continue
+		if p != nil {
+			s.producers = append(s.producers, p)
 		}
-		s.producers = append(s.producers, p)
 	}
 	for _, cfg := range s.Cfg.Ccfgs {
 		cfg.StreamName = s.Name
 		c := consumer.NewConsumer(cfg, s.Pipe)
-		if c == nil {
-			continue
+		if c != nil {
+			s.consumers = append(s.consumers, c)
 		}
-		s.consumers = append(s.consumers, consumer.NewConsumer(cfg, s.Pipe))
 	}
+	if len(s.producers) == 0 || len(s.consumers) == 0 {
+		return errors.New(fmt.Sprintf("dead end stream: %s with %d producers, %d consumers",
+			s.Name,
+			len(s.producers),
+			len(s.consumers)))
+	}
+	log.Debug("stream: %s, total: %d producers, %d consumers", s.Name, len(s.producers), len(s.consumers))
 	return nil
 }
 
@@ -73,7 +78,6 @@ func (s *Stream) Run() {
 		log.Error("Init stream %s fail: %s", s.Name, err.Error())
 		return
 	}
-	log.Debug("stream: %s, total: %d producers, %d consumers", s.Name, len(s.producers), len(s.consumers))
 	// 启动各个生产协程
 	for _, p := range s.producers {
 		wg.Add(1)
@@ -118,8 +122,8 @@ func (s *Stream) Transit() {
 		i = (i + 1) % len(s.consumers)
 	}
 	// pipe已经关闭了，现在需要给所有的consumer发送一个EOF
-	for _, c := range s.consumers {
-		c.Consume()
+	for _, _ = range s.consumers {
+		continue
 	}
 }
 

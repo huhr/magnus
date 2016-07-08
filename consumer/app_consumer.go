@@ -17,7 +17,7 @@ type AppConsumer struct {
 	appStdin	io.WriteCloser
 }
 
-func NewAppConsumer(base BaseConsumer) *AppConsumer {
+func NewAppConsumer(base BaseConsumer) Consumer {
 	cmd := exec.Command(base.cfg.StartupScript)
 	appStdin, err := cmd.StdinPipe()
 	if err != nil {
