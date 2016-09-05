@@ -1,20 +1,21 @@
 package main
 
 import (
-	"path/filepath"
+	"errors"
 	"os"
 	"os/signal"
-	"syscall"
+	"path/filepath"
 	"sync"
+	"syscall"
 
 	"github.com/BurntSushi/toml"
 	log "github.com/huhr/simplelog"
 
-	"github.com/huhr/magnus/config"
 	"github.com/huhr/magnus/stream"
+	"github.com/huhr/magnus/tools"
 )
 
-// 调度中心
+// Adapter负责调度各个stream进行运转
 type Adapter struct {
 	streams []*stream.Stream
 }
@@ -23,34 +24,56 @@ func NewAdapter() *Adapter {
 	return &Adapter{}
 }
 
-// 加载配置文件，创建各个stream
 func (a *Adapter) initStream() error {
+	log.Debug("Degin To Init Streams")
 	files, err := filepath.Glob("conf/stream_*.toml")
 	if err != nil {
-		log.Error("Glob conf files error: %s", err.Error())
 		return err
 	}
-	for _, file := range files {
-		var cfg config.StreamConfig
-		if _, err := toml.DecodeFile(file, &cfg); err != nil {
-			log.Error("Decode toml file error: %s", err.Error())
-			return err
-		}
-		a.streams = append(a.streams, stream.NewStream(cfg))
+	if len(files) == 0 {
+		return errors.New("can not find stream_*.toml file")
 	}
+
+	var config tools.StreamConfig
+	for _, file := range files {
+		if _, err := toml.DecodeFile(file, &config); err != nil {
+			log.Error("Decode Toml File Error: %s", err.Error())
+			continue
+		}
+		s, err := stream.NewStream(config)
+		if err != nil {
+			log.Error("%s Init Error: %s", config.StreamName, err.Error())
+			continue
+		}
+		a.streams = append(a.streams, s)
+	}
+
+	if len(a.streams) == 0 {
+		return errors.New("Init No Success Streams")
+	}
+	log.Debug("Init %d Streams", len(a.streams))
 	return nil
 }
 
+// 注册监听Control-C、SIGTERM信号，优雅停止
+func (a *Adapter) registerSigalHandler() {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-c
+	log.Info("Signal %d received", sig)
+	for _, s := range a.streams {
+		s.ShutDown()
+	}
+}
 
-// 启动各个stream
 func (a Adapter) Run() int {
-	var wg sync.WaitGroup
-	a.registerSigalHandler()
-	log.Debug("begin to init streams")
-	if a.initStream() != nil {
+	go a.registerSigalHandler()
+	if err := a.initStream(); err != nil {
+		log.Error(err.Error())
 		return 1
 	}
-	log.Debug("total %d streams", len(a.streams))
+
+	var wg sync.WaitGroup
 	for _, s := range a.streams {
 		wg.Add(1)
 		go func() {
@@ -61,19 +84,3 @@ func (a Adapter) Run() int {
 	wg.Wait()
 	return 0
 }
-
-func (a *Adapter) registerSigalHandler() {
-    go func() {
-        for {
-            c := make(chan os.Signal)
-            signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-            // sig is blocked as c is 没缓冲
-            sig := <-c
-            log.Info("Signal %d received", sig)
-			for _, s := range a.streams {
-				s.ShutDown()
-			}
-        }
-    }()
-}
-

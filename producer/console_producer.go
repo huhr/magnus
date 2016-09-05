@@ -6,27 +6,27 @@ import (
 	log "github.com/huhr/simplelog"
 
 	"github.com/huhr/magnus/filter"
-	"github.com/huhr/magnus/util"
+	"github.com/huhr/magnus/tools"
 )
 
 // 输出到控制台
 type ConsoleProducer struct {
 	*BaseProducer
-	reader *util.UnitReader
+	reader *tools.UnitReader
 }
 
-func NewConsoleProducer(base *BaseProducer) Producer {
+func NewConsoleProducer(base *BaseProducer) (Producer, error) {
 	return &ConsoleProducer{
 		BaseProducer: base,
-		reader: util.NewUnitReader(os.Stdin, base.cfg.Delimiter, base.cfg.BufSize),
-	}
+		reader:       tools.NewUnitReader(os.Stdin, base.config.Delimiter, base.config.BufSize),
+	}, nil
 }
 
 func (cons *ConsoleProducer) Produce() {
 	for cons.IsActive() {
 		msg, err := cons.reader.ReadOne()
 		if len(msg) > 0 {
-			if !filter.Filter(msg, cons.cfg.Filters) {
+			if !filter.Filter(msg, cons.config.Filters) {
 				cons.pipe <- msg
 			}
 		}

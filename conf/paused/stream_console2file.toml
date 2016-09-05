@@ -1,0 +1,42 @@
+# This is a TOML document. Boom.
+
+# stream名称
+streamName="Console2File"
+# stream的流转方式
+transitType=0
+# 内存中缓存的数据数
+cacheSize=100
+
+#[[pcfgs]]
+#workerName="testFile1"
+#producer="file"
+#filePath="/home/huhaoran/z/text1"
+#backDir="/home/huhaoran/z/"
+#position=1
+#rollType=1
+#delimiter="\n"
+#bufSize=0
+#filters=['point']
+
+#[[pcfgs]]
+#workerName="testFile2"
+#producer="file"
+#filePath="/home/huhaoran/z/text2"
+#backDir="/home/huhaoran/z/"
+#position=1
+#rollType=1
+#delimiter="\n"
+#bufSize=0
+#filters=['point']
+
+#[[ccfgs]]
+#workerName="testConsole"
+#consumer="console"
+#filters=['coma']
+
+#[[ccfgs]]
+#workerName="testApp"
+#consumer="app"
+#startupScript="/home/huhaoran/z/app/app"
+#outputDir="/home/huhaoran/z/app"
+#filters=['coma']

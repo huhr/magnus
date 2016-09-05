@@ -6,10 +6,14 @@ echo xxx.log >> ./text
 make    
 ./magnus -d `pwd`    
 
+## 关于Stream
+这里定义Stream就是业务上的一条数据流，例如业务模块需要收集的独立的
+日志流，
 
-## Magnus
-包含三个模块:
-	部署在集群机器上，负责进行数据收集转发的agent实例，也就是adapter模块
-	负责配置启动机器上adapter，展示adapter状态及各个数据流状态的web模块
-	负责对集群adapter进行状态数据收集存储，已经进行监控报警的Monitor模块
+
+## 多producers、consumers的支持
+
+
+
+## Magnus平台长期规划
 

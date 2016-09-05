@@ -1,7 +1,9 @@
 package producer
 
 import (
-	"github.com/huhr/magnus/config"
+	"errors"
+
+	"github.com/huhr/magnus/tools"
 )
 
 // Producer接口，负责生产数据
@@ -17,24 +19,24 @@ type Producer interface {
 }
 
 // 根据配置内容创建producer
-func NewProducer(cfg config.ProducerConfig, pipe chan []byte) Producer {
-	switch cfg.Producer {
+func NewProducer(config tools.ProducerConfig, pipe chan []byte) (Producer, error) {
+	switch config.Producer {
 	case "console":
-		return NewConsoleProducer(NewBaseProducer(cfg, pipe))
+		return NewConsoleProducer(NewBaseProducer(config, pipe))
 	case "file":
-		return NewFileProducer(NewBaseProducer(cfg, pipe))
+		return NewFileProducer(NewBaseProducer(config, pipe))
 	}
-	return nil
+	return nil, errors.New("Illagle Producer Type " + config.Producer)
 }
 
 type BaseProducer struct {
-	cfg			config.ProducerConfig
-	pipe		chan []byte
-	isOff		bool
+	config tools.ProducerConfig
+	pipe   chan []byte
+	isOff  bool
 }
 
-func NewBaseProducer(cfg config.ProducerConfig, pipe chan []byte) *BaseProducer {
-	base := &BaseProducer{cfg: cfg, pipe: pipe}
+func NewBaseProducer(config tools.ProducerConfig, pipe chan []byte) *BaseProducer {
+	base := &BaseProducer{config: config, pipe: pipe}
 	return base
 }
 
@@ -47,5 +49,5 @@ func (base BaseProducer) IsActive() bool {
 }
 
 func (base BaseProducer) Name() string {
-	return base.cfg.WorkerName
+	return base.config.WorkerName
 }

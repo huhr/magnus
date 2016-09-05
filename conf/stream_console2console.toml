@@ -1,0 +1,20 @@
+# This is a TOML document. Boom.
+
+# stream名称
+streamName="Console2Console"
+# stream的流转方式
+transitType=0
+# 内存中缓存的数据数
+cacheSize=100
+
+[[producerConfigs]]
+workerName="Console"
+producer="console"
+delimiter="\n"
+bufSize=0
+filters=['point']
+
+[[consumerConfigs]]
+workerName="Console"
+consumer="console"
+filters=['coma']

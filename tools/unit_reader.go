@@ -1,4 +1,4 @@
-package util
+package tools
 
 import (
 	"bytes"
@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	DefaultBufferSize = 1<<10
+	DefaultBufferSize = 1 << 10
 )
 
 type UnitReader struct {
-	reader		io.Reader
-	delimiter	string
-	buf			[]byte
-	retry       int
-	r, w		int        // buffer的读写位置
+	reader    io.Reader
+	delimiter string
+	buf       []byte
+	retry     int
+	r, w      int // buffer的读写位置
 }
 
 func NewUnitReader(reader io.Reader, delimiter string, bufSize int) *UnitReader {
@@ -23,9 +23,9 @@ func NewUnitReader(reader io.Reader, delimiter string, bufSize int) *UnitReader 
 		bufSize = DefaultBufferSize
 	}
 	return &UnitReader{
-		reader: reader,
+		reader:    reader,
 		delimiter: delimiter,
-		buf: make([]byte, bufSize),
+		buf:       make([]byte, bufSize),
 	}
 }
 
@@ -39,7 +39,7 @@ func (c *UnitReader) ReadOne() (msg []byte, err error) {
 		offset := bytes.Index(c.buf[c.r:c.w], []byte(c.delimiter))
 		if offset == -1 {
 			// buf已经读满了，直接返回buf中的全部数据作为一个数据单元
-			if c.w - c.r == cap(c.buf) {
+			if c.w-c.r == cap(c.buf) {
 				msg := make([]byte, len(c.buf))
 				copy(msg, c.buf)
 				c.r = c.w
@@ -54,7 +54,7 @@ func (c *UnitReader) ReadOne() (msg []byte, err error) {
 			continue
 		}
 		msg := make([]byte, offset)
-		copy(msg, c.buf[c.r:c.r + offset])
+		copy(msg, c.buf[c.r:c.r+offset])
 		c.r += offset + len(c.delimiter)
 		return msg, nil
 	}
@@ -74,4 +74,3 @@ func (c *UnitReader) fill() (n int, err error) {
 	c.w += n
 	return
 }
-

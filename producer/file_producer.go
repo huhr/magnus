@@ -1,22 +1,22 @@
 package producer
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
-	"syscall"
-	"strconv"
-	"os"
-	"time"
-	"path/filepath"
-	"regexp"
 	"io"
 	"io/ioutil"
-	"errors"
-	"encoding/json"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"syscall"
+	"time"
 
 	log "github.com/huhr/simplelog"
 
 	"github.com/huhr/magnus/filter"
-	"github.com/huhr/magnus/util"
+	"github.com/huhr/magnus/tools"
 )
 
 const (
@@ -29,25 +29,25 @@ const (
 // 类型的编辑保存操作
 type FileProducer struct {
 	*BaseProducer
-	offset          int64
+	offset int64
 	// 当前正在处理的文件
-	runtime         *runtimeData
-	reader			*util.UnitReader
+	runtime *runtimeData
+	reader  *tools.UnitReader
 }
 
 // 创建FileProducer实例时，尝试去加载runtime文件，找到需要
 // 打开的文件，seek到上次读的位置，继续读
-func NewFileProducer(base *BaseProducer) Producer {
+func NewFileProducer(base *BaseProducer) (Producer, error) {
 	producer := &FileProducer{
 		BaseProducer: base,
 	}
 	if producer.loadRuntime() != nil {
-		return nil
+		return nil, nil
 	}
 	if producer.seekFile() != nil {
-		return nil
+		return nil, nil
 	}
-	return producer
+	return producer, nil
 }
 
 func (f *FileProducer) Produce() {
@@ -56,9 +56,9 @@ func (f *FileProducer) Produce() {
 		msg, err := f.reader.ReadOne()
 		if len(msg) > 0 {
 			// read到数据了，记录offset
-			f.offset += int64(len(msg)) + int64(len(f.cfg.Delimiter))
+			f.offset += int64(len(msg)) + int64(len(f.config.Delimiter))
 			// 过滤数据，不符合规则的丢弃
-			if !filter.Filter(msg, f.cfg.Filters) {
+			if !filter.Filter(msg, f.config.Filters) {
 				f.pipe <- msg
 			}
 			continue
@@ -68,16 +68,16 @@ func (f *FileProducer) Produce() {
 		//      2、当前文件还在working目录：sleep
 		if err == io.EOF {
 			// 可能是已经mv了旧文件，新的文件还没有生成，打错误日志
-			same, err := f.match(f.cfg.FilePath)
+			same, err := f.match(f.config.FilePath)
 			// 路径出错，working目录的文件还没有生成，当前读的文件一定不再working目录了
 			// 可以尝试去寻找下一个要读的文件继续读，working目录没有文件
 			if same == false || err != nil {
 				if err != nil && !os.IsNotExist(err) {
-					log.Error("%s-%s file roll error: %s", f.cfg.StreamName, f.cfg.WorkerName, err.Error())
+					log.Error("%s-%s file roll error: %s", f.config.StreamName, f.config.WorkerName, err.Error())
 					return
 				}
 				err := f.seekFile()
-				if err !=nil {
+				if err != nil {
 					log.Error(err.Error())
 					time.Sleep(1 * time.Second)
 				}
@@ -97,7 +97,7 @@ func (f *FileProducer) Produce() {
 // 这里包含核心逻辑:
 //			无runtime起停：第一次起
 //			有runtime起停：
-//				重启时	
+//				重启时
 //				读到EOF的当前文件已经在backup文件夹中
 func (f *FileProducer) seekFile() error {
 
@@ -113,7 +113,7 @@ func (f *FileProducer) seekFile() error {
 			return err
 		}
 		f.offset = offset
-		f.reader = util.NewUnitReader(file, f.cfg.Delimiter, f.cfg.BufSize)
+		f.reader = tools.NewUnitReader(file, f.config.Delimiter, f.config.BufSize)
 		f.runtime = newRuntimeData(file)
 		return nil
 	}
@@ -125,8 +125,8 @@ func (f *FileProducer) seekFile() error {
 	//////////////////////////////////////////////////
 	if f.runtime == nil {
 		// 从当前日志文件的文件首开始读
-		if f.cfg.Position == PRESENT {
-			return reload(f.cfg.FilePath, 0)
+		if f.config.Position == PRESENT {
+			return reload(f.config.FilePath, 0)
 		}
 		// 找到最早的数据文件，开始读
 		return errors.New("ORIGINAL is not support yield")
@@ -137,8 +137,8 @@ func (f *FileProducer) seekFile() error {
 	////////////////////////////////////////////
 	if f.reader == nil {
 		// 比较backup和working中的文件，找到当前文件，确定下一个要读的文件
-		if isMatch, _ := f.match(f.cfg.FilePath); isMatch {
-			return reload(f.cfg.FilePath, f.runtime.Offset)
+		if isMatch, _ := f.match(f.config.FilePath); isMatch {
+			return reload(f.config.FilePath, f.runtime.Offset)
 		}
 		matchFile, err := f.seekFileByInode()
 		if err != nil {
@@ -157,20 +157,20 @@ func (f *FileProducer) seekFile() error {
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile(filepath.Base(f.cfg.FilePath) + `\.(\d+)$`)
+	re := regexp.MustCompile(filepath.Base(f.config.FilePath) + `\.(\d+)$`)
 	ret := re.FindStringSubmatch(matchFile)
 	if ret == nil {
 		return errors.New("regexp error")
 	}
 	// 如果存在下一个文件，打开下一个文件进行切割
 	postfix, _ := strconv.Atoi(ret[1])
-	nextFile := fmt.Sprintf("%s/%s.%d", f.cfg.BackDir, filepath.Base(f.cfg.FilePath), postfix + 1)
+	nextFile := fmt.Sprintf("%s/%s.%d", f.config.BackDir, filepath.Base(f.config.FilePath), postfix+1)
 	_, err = os.Stat(nextFile)
 	if err == nil {
 		return reload(nextFile, 0)
 	}
 
-	for f.IsActive() && reload(f.cfg.FilePath, 0) != nil {
+	for f.IsActive() && reload(f.config.FilePath, 0) != nil {
 		time.Sleep(3 * time.Second)
 		continue
 	}
@@ -179,7 +179,7 @@ func (f *FileProducer) seekFile() error {
 
 // 根据当前的runtime信息，从backup中找到对应的文件的文件名
 func (f FileProducer) seekFileByInode() (string, error) {
-	pattern := fmt.Sprintf("%s/%s*", f.cfg.BackDir, filepath.Base(f.cfg.FilePath))
+	pattern := fmt.Sprintf("%s/%s*", f.config.BackDir, filepath.Base(f.config.FilePath))
 	matchFiles, err := filepath.Glob(pattern)
 	if err != nil {
 		return "", err
@@ -192,7 +192,6 @@ func (f FileProducer) seekFileByInode() (string, error) {
 	return "", errors.New("can not find the file in backup")
 }
 
-
 // 校验给定路径的文件是不是producer正在读的文件
 func (f FileProducer) match(filePath string) (bool, error) {
 	fileStat, err := os.Stat(filePath)
@@ -204,9 +203,9 @@ func (f FileProducer) match(filePath string) (bool, error) {
 }
 
 type runtimeData struct {
-	Offset      int64
-	Dev			uint64
-	Ino         uint64
+	Offset int64
+	Dev    uint64
+	Ino    uint64
 }
 
 // producer的runtime数据，这里包含对应的文件信息，并不包含offset信息
@@ -223,11 +222,11 @@ func newRuntimeData(file *os.File) *runtimeData {
 
 // dump producer的runtime到特定的文件中
 func (f FileProducer) dumpRuntime() {
-	runtimeFilePath := fmt.Sprintf("runtime/stream_%s_%s.data", f.cfg.StreamName, f.cfg.WorkerName)
+	runtimeFilePath := fmt.Sprintf("runtime/stream_%s_%s.data", f.config.StreamName, f.config.WorkerName)
 	// 如果文件已经存在，Create函数会覆盖老的文件
 	runtimeFile, err := os.Create(runtimeFilePath)
 	if err != nil {
-		log.Error("%s-%s create data file %s error:", f.cfg.StreamName, f.cfg.WorkerName, runtimeFilePath, err.Error())
+		log.Error("%s-%s create data file %s error:", f.config.StreamName, f.config.WorkerName, runtimeFilePath, err.Error())
 		return
 	}
 	// 这里需要获取当前的offset
@@ -239,7 +238,7 @@ func (f FileProducer) dumpRuntime() {
 // 程序启动时加载运行时文件，找到上次读的文件
 // 在runtimeFile存在的情况下，遇到任何异常都会导致producer初始化失败
 func (f *FileProducer) loadRuntime() error {
-	runtimeFilePath := fmt.Sprintf("runtime/stream_%s_%s.data", f.cfg.StreamName, f.cfg.WorkerName)
+	runtimeFilePath := fmt.Sprintf("runtime/stream_%s_%s.data", f.config.StreamName, f.config.WorkerName)
 	runtimeFile, err := os.Open(runtimeFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {

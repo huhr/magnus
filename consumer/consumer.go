@@ -1,7 +1,9 @@
 package consumer
 
 import (
-	"github.com/huhr/magnus/config"
+	"errors"
+
+	"github.com/huhr/magnus/tools"
 )
 
 type Consumer interface {
@@ -10,17 +12,19 @@ type Consumer interface {
 }
 
 type BaseConsumer struct {
-	cfg		config.ConsumerConfig
-	pipe	chan []byte
+	config tools.ConsumerConfig
+	pipe   chan []byte
 }
 
 // 创建Consumer
-func NewConsumer(cfg config.ConsumerConfig, pipe chan []byte) Consumer {
-	switch cfg.Consumer {
+func NewConsumer(config tools.ConsumerConfig, pipe chan []byte) (Consumer, error) {
+	switch config.Consumer {
 	case "console":
-		return &ConsoleConsumer{BaseConsumer{cfg, pipe}}
+		return NewConsoleConsumer(BaseConsumer{config, pipe})
+	case "file":
+		return NewFileConsumer(BaseConsumer{config, pipe})
 	case "app":
-		return NewAppConsumer(BaseConsumer{cfg, pipe})
+		return NewAppConsumer(BaseConsumer{config, pipe})
 	}
-	return nil
+	return nil, errors.New("Illagle Producer Type " + config.Consumer)
 }
