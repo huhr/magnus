@@ -6,8 +6,6 @@ import (
 	"os/exec"
 
 	log "github.com/huhr/simplelog"
-
-	"github.com/huhr/magnus/filter"
 )
 
 // 启动下游程序，并将数据发送到下游程序的stdin
@@ -40,11 +38,9 @@ func NewAppConsumer(base BaseConsumer) (Consumer, error) {
 }
 
 func (app *AppConsumer) Consume(msg []byte) bool {
-	if !filter.Filter(msg, app.config.Filters) {
-		if _, err := app.appStdin.Write(msg); err != nil {
-			log.Error(err.Error())
-			return false
-		}
+	if _, err := app.appStdin.Write(msg); err != nil {
+		log.Error(err.Error())
+		return false
 	}
 	return true
 }

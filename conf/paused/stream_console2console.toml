@@ -3,7 +3,7 @@
 # stream名称
 streamName="Console2Console"
 # stream的流转方式
-transitType=0
+transitType=1
 # 内存中缓存的数据数
 cacheSize=100
 

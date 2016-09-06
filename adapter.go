@@ -31,7 +31,7 @@ func (a *Adapter) initStream() error {
 		return err
 	}
 	if len(files) == 0 {
-		return errors.New("can not find stream_*.toml file")
+		return errors.New("Can Not Find stream_*.toml File")
 	}
 
 	var config tools.StreamConfig
@@ -56,6 +56,7 @@ func (a *Adapter) initStream() error {
 }
 
 // 注册监听Control-C、SIGTERM信号，优雅停止
+// 监听其他信号，处理如reload等操作
 func (a *Adapter) registerSigalHandler() {
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)

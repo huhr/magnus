@@ -55,6 +55,11 @@ func (f *FileProducer) Produce() {
 		// read一个数据单元
 		msg, err := f.reader.ReadOne()
 		if len(msg) > 0 {
+			// ReadOne是阻塞式的，有可能read到数据了而pipe已经关闭了，所以
+			// 这里额外校验一次producer是不是已经ShutDown
+			if !f.IsActive() {
+				continue
+			}
 			// read到数据了，记录offset
 			f.offset += int64(len(msg)) + int64(len(f.config.Delimiter))
 			// 过滤数据，不符合规则的丢弃

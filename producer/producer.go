@@ -33,6 +33,7 @@ type BaseProducer struct {
 	config tools.ProducerConfig
 	pipe   chan []byte
 	isOff  bool
+	quit   chan interface{}
 }
 
 func NewBaseProducer(config tools.ProducerConfig, pipe chan []byte) *BaseProducer {

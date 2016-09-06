@@ -9,7 +9,6 @@ import (
 	"github.com/huhr/magnus/tools"
 )
 
-// 输出到控制台
 type ConsoleProducer struct {
 	*BaseProducer
 	reader *tools.UnitReader
@@ -27,7 +26,11 @@ func (cons *ConsoleProducer) Produce() {
 		msg, err := cons.reader.ReadOne()
 		if len(msg) > 0 {
 			if !filter.Filter(msg, cons.config.Filters) {
-				cons.pipe <- msg
+				// ReadOne是阻塞的，停掉Produce时可能还会额外写入一个数据
+				// console没有offset的概念，这条数据会被丢弃
+				if cons.IsActive() {
+					cons.pipe <- msg
+				}
 			}
 		}
 		if err != nil {

@@ -21,10 +21,10 @@ func NewConsumer(config tools.ConsumerConfig, pipe chan []byte) (Consumer, error
 	switch config.Consumer {
 	case "console":
 		return NewConsoleConsumer(BaseConsumer{config, pipe})
-	case "file":
-		return NewFileConsumer(BaseConsumer{config, pipe})
+	case "archive":
+		return NewArchiveConsumer(BaseConsumer{config, pipe})
 	case "app":
 		return NewAppConsumer(BaseConsumer{config, pipe})
 	}
-	return nil, errors.New("Illagle Producer Type " + config.Consumer)
+	return nil, errors.New("Illagle Consumer Type " + config.Consumer)
 }

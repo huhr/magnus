@@ -1,0 +1,30 @@
+# This is a TOML document. Boom.
+
+# stream名称
+streamName="Console2Files"
+# stream的流转方式
+transitType=2
+# 内存中缓存的数据数
+cacheSize=100
+
+[[producerConfigs]]
+workerName="Console"
+producer="console"
+delimiter="\n"
+bufSize=0
+filters=['point']
+
+[[consumerConfigs]]
+workerName="Archive1"
+consumer="archive"
+filePath="/home/huhaoran/magnus/data/archive1.txt"
+
+[[consumerConfigs]]
+workerName="Archive2"
+consumer="archive"
+filePath="/home/huhaoran/magnus/data/archive2.txt"
+
+[[consumerConfigs]]
+workerName="Archive3"
+consumer="archive"
+filePath="/home/huhaoran/magnus/data/archive3.txt"

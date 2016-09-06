@@ -18,6 +18,10 @@ var (
 func main() {
 	exitCode := 0
 	defer func() {
+		if p := recover(); p != nil {
+			fmt.Fprintln(os.Stderr, p)
+			os.Exit(1)
+		}
 		os.Exit(exitCode)
 	}()
 
@@ -44,7 +48,6 @@ func main() {
 			return
 		}
 	}
-
 	adapter := NewAdapter()
 	exitCode = adapter.Run()
 }
@@ -58,21 +61,24 @@ func parseFlag() {
 
 // 初始化日志配置，使用了simplelog
 func initLog() {
-	log.LoadConfigMap(
+	err := log.LoadConfigMap(
 		map[string][]map[string]string{
 			"root": []map[string]string{
 				map[string]string{
 					"Level":    "info, debug, warn",
-					"Output":   "log/adapter.log",
+					"Output":   "logs/adapter.log",
 					"Rotation": "daily",
 					"Format":   "detail",
 				},
 				map[string]string{
 					"Level":    "error, fatal",
-					"Output":   "log/adapter.err",
+					"Output":   "logs/adapter.err",
 					"Rotation": "daily",
 					"Format":   "detail",
 				},
 			},
 		})
+	if err != nil {
+		fmt.Println("asd")
+	}
 }

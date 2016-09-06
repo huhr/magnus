@@ -1,7 +1,3 @@
-// 对于数据流我们可能会有哪些应用场景？
-// 磁盘文件 =》 MQ
-// MQ =》磁盘、下游app
-//
 package stream
 
 import (
@@ -19,6 +15,8 @@ import (
 const (
 	// 轮询
 	ROUNDROBIN = iota + 1
+	// 广播
+	BROADCAST
 	// 带权重随机
 	WEIGHTEDRANDOM
 )
@@ -81,16 +79,14 @@ func (s *Stream) initEnds() error {
 }
 
 func (s *Stream) Run() {
-	s.runSerial()
+	s.run1()
 }
 
-// 串行消费模式：保证数据顺序，先生产的producer先consume，数据逐一
-// 进行consume，任意一个消费下游的阻塞都可能导致整个流的阻塞。可能
-// 适用于处理有顺序需求的下游模块的场景。
-// 这里Producer是并行的
-func (s *Stream) runSerial() {
+// 第一种模式，生产者并发产生数据，数据在由stream按照调度策略逐一发送给各个
+// consumers，发送失败顺延为下一次发送
+func (s *Stream) run1() {
 	var wg sync.WaitGroup
-	// 启动各个生产协程
+	// 启动各个生产协程，这里是没有顺序关系的
 	for _, p := range s.producers {
 		wg.Add(1)
 		log.Debug("Producer %s Start", p.Name())
@@ -116,14 +112,13 @@ func (s *Stream) runSerial() {
 	return
 }
 
-// 并行消费模式，多个consumer并行进行处理，不能保证数据的消费顺序，典型的
-// 应用场景如下游为多个逻辑一直的回调发送模块
 func (s *Stream) runConcurrent() {
 	return
 }
 
 // 关闭程序，先关闭生产者，等数据消费完，记录offset
 func (s *Stream) ShutDown() {
+	log.Debug("Stream %s Begin To ShutDown", s.Config.StreamName)
 	for _, p := range s.producers {
 		p.ShutDown()
 	}
@@ -131,15 +126,57 @@ func (s *Stream) ShutDown() {
 }
 
 // 根据不同的策略，将数据分发给不同的Consume
-// 这里是穿行的，还没想好怎么调整为并发的
 func (s *Stream) Transit() {
-	var i int
+	switch s.Config.TransitType {
+	case ROUNDROBIN:
+		s.transitByROUNDROBIN()
+	case BROADCAST:
+		s.transitByBROADCAST()
+	case WEIGHTEDRANDOM:
+		s.transitByWEIGHTEDRANDOM()
+	default:
+		log.Error("Undefined TransitType %d", s.Config.TransitType)
+	}
+}
+
+// 顺序逐个发送，发送失败后顺延发送给下一个consumer，默认一个数据三轮发送失败
+// 后会被丢弃，连续三个数据三轮发送失败，Stream停止运行
+func (s *Stream) transitByROUNDROBIN() {
+	var i = -1                               // consumers的下标
+	var errMsgs = 0                          // 连续消费出错的数据条数
+	var roundRetryNum = 2 * len(s.consumers) // 当一条消息消费出错时，顺延消费两圈
 	for msg := range s.Pipe {
-		s.consumers[i].Consume(msg)
-		i = (i + 1) % len(s.consumers)
+		var j int
+		for j < roundRetryNum {
+			j++
+			i = (i + 1) % len(s.consumers)
+			if s.consumers[i].Consume(msg) {
+				break
+			}
+		}
+		if j >= roundRetryNum {
+			log.Error("Stream %s retry too much numbers, msg: %s", s.Config.StreamName, msg)
+			errMsgs++
+			if errMsgs > 2 {
+				log.Error("Stream %s has occurred exception for 3 messages", s.Config.StreamName)
+				s.ShutDown()
+			}
+		} else {
+			errMsgs = 0
+		}
 	}
-	// pipe已经关闭了，现在需要给所有的consumer发送一个EOF
-	for _, _ = range s.consumers {
-		continue
+}
+
+// 广播模式，给每一个consumer发送数据，考虑阻塞的形式以及重试机制
+func (s *Stream) transitByBROADCAST() {
+	for msg := range s.Pipe {
+		for _, c := range s.consumers {
+			c.Consume(msg)
+		}
 	}
+}
+
+// 带权重抽取
+func (s *Stream) transitByWEIGHTEDRANDOM() {
+	return
 }
