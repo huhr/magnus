@@ -2,6 +2,7 @@ package stream
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	log "github.com/huhr/simplelog"
@@ -165,6 +166,10 @@ func (s *Stream) transitByROUNDROBIN() {
 			errMsgs = 0
 		}
 	}
+	for _, c := range s.consumers {
+		fmt.Printf("ShutDown Consumers")
+		c.ShutDown()
+	}
 }
 
 // 广播模式，给每一个consumer发送数据，考虑阻塞的形式以及重试机制
@@ -173,6 +178,9 @@ func (s *Stream) transitByBROADCAST() {
 		for _, c := range s.consumers {
 			c.Consume(msg)
 		}
+	}
+	for _, c := range s.consumers {
+		c.ShutDown()
 	}
 }
 

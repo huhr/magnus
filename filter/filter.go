@@ -3,16 +3,15 @@ package filter
 
 var FilersMap = map[string]func([]byte) bool{
 	"point": PointFilter,
-	"coma": ComaFilter,
+	"coma":  ComaFilter,
 }
 
 func Register(name string, f func([]byte) bool) {
 	FilersMap[name] = f
 }
 
-
 // 过滤函数
-//    data: 待过滤的数据 
+//    data: 待过滤的数据
 //    filterList: 使用的过滤器名称列表，这些名称一定是出现在FilersMap中的才有效
 func Filter(data []byte, filterList []string) bool {
 	for _, filterName := range filterList {

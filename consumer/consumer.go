@@ -9,11 +9,16 @@ import (
 type Consumer interface {
 	// 消费一条数据
 	Consume([]byte) bool
+	ShutDown()
 }
 
 type BaseConsumer struct {
 	config tools.ConsumerConfig
 	pipe   chan []byte
+}
+
+func (b BaseConsumer) ShutDown() {
+	return
 }
 
 // 创建Consumer

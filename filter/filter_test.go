@@ -2,11 +2,11 @@ package filter
 
 import (
 	"fmt"
-    "testing"
+	"testing"
 )
 
 func TestLog(t *testing.T) {
-	fmt.Printf("filter result : %+v \n",
-		Filter([]byte("asd,asd"), []string{"point", "coma"})
-	)
+	fmt.Printf(
+		"filter result : %+v \n",
+		Filter([]byte("asd,asd"), []string{"point", "coma"}))
 }

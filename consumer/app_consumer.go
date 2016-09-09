@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -38,9 +39,16 @@ func NewAppConsumer(base BaseConsumer) (Consumer, error) {
 }
 
 func (app *AppConsumer) Consume(msg []byte) bool {
-	if _, err := app.appStdin.Write(msg); err != nil {
+	if _, err := app.appStdin.Write([]byte(fmt.Sprintf("%s\n", msg))); err != nil {
 		log.Error(err.Error())
 		return false
 	}
 	return true
+}
+
+func (app *AppConsumer) ShutDown() {
+	err := app.appStdin.Close()
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
