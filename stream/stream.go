@@ -2,7 +2,6 @@ package stream
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 
 	log "github.com/huhr/simplelog"
@@ -147,7 +146,7 @@ func (s *Stream) transitByROUNDROBIN() {
 	var errMsgs = 0                          // 连续消费出错的数据条数
 	var roundRetryNum = 2 * len(s.consumers) // 当一条消息消费出错时，顺延消费两圈
 	for msg := range s.Pipe {
-		var j int
+		j := 0
 		for j < roundRetryNum {
 			j++
 			i = (i + 1) % len(s.consumers)
@@ -167,7 +166,6 @@ func (s *Stream) transitByROUNDROBIN() {
 		}
 	}
 	for _, c := range s.consumers {
-		fmt.Printf("ShutDown Consumers")
 		c.ShutDown()
 	}
 }

@@ -4,27 +4,30 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
-	/*file, _ := os.Create("/home/huhaoran/way/goofme/exec/app_done")
+	reader := bufio.NewReader(os.Stdin)
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		sig := <-c
+		fmt.Println(sig)
+	}()
 	for true {
-		msg, _, _ := reader.ReadLine()
-		//file.Write(msg)
-		if msg == nil {
-			return
-		}
-		fmt.Printf("%s", msg)
-	}*/
-	for true {
-		reader := bufio.NewReader(os.Stdin)
 		msg, _, err := reader.ReadLine()
 		if err == nil {
 			fmt.Printf("%s\n", msg)
 		} else {
-			fmt.Printf(err.Error())
-			return
+			fmt.Printf("%s\n", msg)
+			fmt.Println(err.Error())
+			break
 		}
 	}
-	print("hhee")
+	fmt.Println("Process App Start ShutDown")
+	time.Sleep(5 * time.Second)
+	fmt.Println("Process App ShutDown")
 }

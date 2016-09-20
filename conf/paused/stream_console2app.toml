@@ -1,0 +1,22 @@
+# This is a TOML document. Boom.
+
+# stream名称
+streamName="Console2App"
+# stream的流转方式
+transitType=1
+# 内存中缓存的数据数
+cacheSize=100
+
+[[producerConfigs]]
+workerName="Console"
+producer="console"
+delimiter="\n"
+bufSize=0
+filters=['point']
+
+[[consumerConfigs]]
+workerName="app"
+consumer="app"
+startupScript="/home/huhaoran/magnus/app/app" 
+outputDir="/home/huhaoran/magnus/app"
+

@@ -1,0 +1,32 @@
+# This is a TOML document. Boom.
+
+# stream名称，一个toml配置文件描述一条流的信息
+streamName="Console2App"
+
+# 在多consumer的场景下，这里支持不同的数据发送的流转方式
+# 1：轮训，按照顺序逐个发送produer采集的数据到consumer，
+# 默认情况下一个数据如果发送失败，会被顺延发送给下一个
+# consumer消费，完整的轮转两次之后数据仍然没有消费成功
+# 则直接丢弃，连续丢弃三个数据之后Stream会被强行停止。
+#
+# 2：广播，数据会被发送给所有的下游consumer
+#
+# 3：带权重随机抽取，允许给每一个conumser配置一个权重值，
+# Stream根据权重随机发送数据到任意consumer
+transitType=1
+# 内存中缓存的数据数
+cacheSize=100
+
+[[producerConfigs]]
+workerName="Console"
+producer="console"
+delimiter="\n"
+bufSize=0
+filters=['point']
+
+[[consumerConfigs]]
+workerName="app"
+consumer="app"
+startupScript="/home/huhaoran/z/magnus/app/app" 
+outputDir="/home/huhaoran/z/magnus/app"
+

@@ -51,4 +51,5 @@ func (app *AppConsumer) ShutDown() {
 	if err != nil {
 		log.Error(err.Error())
 	}
+	app.cmd.Wait()
 }
